@@ -1,178 +1,112 @@
 # Mathematical Calculator MCP Server
 
-This is a Model Context Protocol (MCP) server that provides Claude with advanced mathematical calculation capabilities, including symbolic math, statistical analysis, and matrix operations.
+A single-binary Rust MCP (Model Context Protocol) server that provides mathematical calculation capabilities, including symbolic math, statistics, and matrix operations.
 
 ## Features
 
-The Mathematical Calculator MCP Server provides the following tools:
-
-- **Basic Calculations**: Evaluate mathematical expressions safely
+- **Basic Calculations**: Evaluate mathematical expressions safely (`calculate`)
 - **Symbolic Mathematics**:
-  - Solve equations (linear, quadratic, polynomial, etc.)
-  - Calculate derivatives of expressions
-  - Compute integrals of expressions
+  - Solve equations (`solve_equation`)
+  - Calculate derivatives (`differentiate`)
+  - Compute integrals (`integrate`)
+  - Expand expressions (`expand`)
+  - Summation over ranges (`summation`)
+  - Plot functions (`plot_function`)
 - **Statistical Analysis**:
-  - Mean, median, mode
-  - Variance, standard deviation
-  - Correlation coefficient
-  - Linear regression
+  - Mean, median, mode, variance, standard deviation
+  - Correlation coefficient, linear regression
   - Confidence intervals
-- **Matrix Operations**:
-  - Matrix addition
-  - Matrix multiplication
-  - Matrix transposition
+- **Matrix & Vector Operations**:
+  - Matrix addition, multiplication, transpose, determinant
+  - Vector dot product, cross product, magnitude
+
+> **Note**: `factorize` is not yet ported — see [UPSTREAM.md](UPSTREAM.md) for details.
 
 ## Installation
 
-### Prerequisites
+### Linux/macOS
 
-- Python 3.10+ (recommended: Python 3.11+)
-- [uv](https://github.com/astral-sh/uv) (recommended) or pip
-- Claude Desktop app (to use the MCP server with Claude)
+```bash
+# Download the latest release
+curl -fsSL https://github.com/huhabla/calculator-mcp-server/releases/latest/download/calculator-mcp-server-v1.0.0-x86_64-unknown-linux-musl.tar.gz | tar xz
+sudo install calculator-mcp-server-v1.0.0-x86_64-unknown-linux-musl/calculator-mcp-server /usr/local/bin/
 
-### Installation Steps
+# Verify checksum
+sha256sum -c SHA256SUMS.txt
+```
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/huhabla/calculator-mcp-server.git
-   cd calculator-mcp-server
-   ```
+### Windows (PowerShell)
 
-2. (Option 1) Setup with the provided script:
-   ```bash
-   chmod +x setup_venv.sh
-   ./setup_venv.sh
-   ```
+```powershell
+Invoke-WebRequest -Uri "https://github.com/huhabla/calculator-mcp-server/releases/latest/download/calculator-mcp-server-v1.0.0-x86_64-pc-windows-msvc.zip" -OutFile "calculator-mcp-server.zip"
+Expand-Archive calculator-mcp-server.zip -DestinationPath .
+```
 
-   (Option 2) Or manually set up the virtual environment:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
+### macOS
 
-3. Run doc-tests to verify everything works:
-   ```bash
-   bash run_doctests.sh
-   ```
+For macOS, download the universal binary:
+```bash
+curl -fsSL https://github.com/huhabla/calculator-mcp-server/releases/latest/download/calculator-mcp-server-v1.0.0-universal-apple-darwin.tar.gz | tar xz
+sudo install calculator-mcp-server-v1.0.0-universal-apple-darwin/calculator-mcp-server /usr/local/bin/
+```
+
+If you downloaded via browser and get a Gatekeeper warning:
+```bash
+xattr -d com.apple.quarantine /usr/local/bin/calculator-mcp-server
+```
 
 ## Integration with Claude Desktop
-
-### Method 1: Configure in Claude Desktop
 
 Add the server to your Claude Desktop configuration file:
 
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`  
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
-Add the following to the `mcpServers` section:
-
 ```json
 {
   "mcpServers": {
     "calculator": {
-      "command": "uvx",
-      "args": [
-        "--from",
-        "calculator-mcp-server@git+https://github.com/huhabla/calculator-mcp-server.git",
-        "--",
-        "calculator-mcp-server",
-        "--stdio"
-      ]
+      "command": "/usr/local/bin/calculator-mcp-server",
+      "args": ["--stdio"]
     }
   }
 }
 ```
 
-**Note**: The `--stdio` flag is required for proper integration with Claude Desktop. The `--` separates uvx arguments from the calculator server arguments.
-
-### Method 2: Install with FastMCP
-
-1. Make sure you have uv installed ([Installation Guide](https://github.com/astral-sh/uv))
-
-2. Install the MCP server in Claude Desktop:
-   ```bash
-   fastmcp install calculator_server.py
-   ```
-
-   Or with a custom name:
-   ```bash
-   fastmcp install calculator_server.py --name "Math Calculator"
-   ```
-
-3. Once installed, Claude will automatically have access to all the mathematical tools and functions.
-
-## Usage Examples
-
-After integrating with Claude Desktop, you can ask Claude to perform various mathematical operations. Here are some examples:
-
-### Basic Calculations
-```
-Can you calculate 3.5^2 * sin(pi/4)?
-```
-
-### Solving Equations
-```
-Solve the following equation: x^2 - 5x + 6 = 0
-```
-
-### Calculating Derivatives
-```
-What's the derivative of sin(x^2) with respect to x?
-```
-
-### Computing Integrals
-```
-Calculate the integral of x^2 * e^x
-```
-
-### Statistical Analysis
-```
-Find the mean, median, mode, and standard deviation of this dataset: [23, 45, 12, 67, 34, 23, 18, 95, 41, 23]
-```
-
-### Linear Regression
-```
-Perform a linear regression on these points: (1,2), (2,3.5), (3,5.1), (4,6.5), (5,8.2)
-```
-
-### Matrix Operations
-```
-Multiply these two matrices:
-[1, 2, 3]
-[4, 5, 6]
-
-and
-
-[7, 8]
-[9, 10]
-[11, 12]
-```
+The `--stdio` flag is accepted for compatibility but not required (stdio is the only transport).
 
 ## Development
 
-### Testing
+### Prerequisites
 
-Run the comprehensive doctest suite:
+- Rust stable (1.88+)
+
+### Building
+
 ```bash
-bash run_doctests.sh
+cargo build
+cargo test
 ```
 
-### Interactive Development Mode
+### Running the smoke test
 
-For development and debugging, you can use the FastMCP development mode:
 ```bash
-fastmcp dev calculator_server.py
+bash scripts/smoke_test.sh
 ```
 
-This will start a local web interface where you can test all tools interactively.
+### Interactive debugging
+
+```bash
+npx @modelcontextprotocol/inspector ./target/debug/calculator-mcp-server
+```
+
+### Release process
+
+1. Bump the version in `Cargo.toml`
+2. Commit and tag: `git tag vX.Y.Z`
+3. Push the tag: `git push origin vX.Y.Z`
+4. The GitHub Actions release workflow will build and publish binaries automatically.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgements
-
-- [FastMCP](https://github.com/jlowin/fastmcp) for the Pythonic MCP server framework
-- [SymPy](https://sympy.org/) for symbolic mathematics
-- [NumPy](https://numpy.org/) and [SciPy](https://scipy.org/) for numerical and statistical computations
+This project is licensed under the MIT License — see the LICENSE file for details.
