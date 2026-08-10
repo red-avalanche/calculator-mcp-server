@@ -59,3 +59,6 @@ coverage.xml
 /CLAUDE.md
 a.ipynb
 system_prompt.txt
+
+# Rust
+/target
