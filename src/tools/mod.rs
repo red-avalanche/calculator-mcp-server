@@ -2,9 +2,14 @@
 // crate (src/main.rs). Each file in src/tools/ is a module; the filename IS the
 // module name (e.g. src/tools/calculate.rs → `tools::calculate`).
 pub mod calculate;
+pub mod datetime;
+pub mod finance;
 pub mod linalg;
+pub mod precision;
+pub mod programmer;
 pub mod stats;
 pub mod symbolic;
+pub mod units;
 
 // `use` brings types into scope so we don't have to write full paths.
 // `rmcp::model` contains the core MCP protocol types.

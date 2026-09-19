@@ -301,6 +301,211 @@ impl Calculator {
     ) -> Result<CallToolResult, rmcp::ErrorData> {
         tools::linalg::vector_magnitude_tool(req)
     }
+
+    /// Rounds a number to a specified number of decimal places. Supports
+    /// modes: "half_up" (half away from zero, default), "half_even" (banker's
+    /// rounding), "floor", "ceil", "trunc". Decimals may be negative (e.g.
+    /// -2 rounds to hundreds). NOTE: f64 binary representation means some
+    /// values can't be exact (e.g. 2.675 -> 2.67 at 2 decimal places).
+    #[tool(name = "round_number")]
+    fn round_number(
+        &self,
+        Parameters(req): Parameters<tools::precision::RoundNumberRequest>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        tools::precision::round_number_tool(req)
+    }
+
+    /// Formats a number to a specified number of significant figures (1-17).
+    /// Returns a string to preserve trailing zeros (e.g. 2.500, not 2.5).
+    #[tool(name = "significant_figures")]
+    fn significant_figures(
+        &self,
+        Parameters(req): Parameters<tools::precision::SignificantFiguresRequest>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        tools::precision::significant_figures_tool(req)
+    }
+
+    /// Formats a number in scientific (mantissa in [1, 10), e.g. 1.23e4) or
+    /// engineering (exponent multiple of 3, mantissa in [1, 1000), e.g. 12.3e3)
+    /// notation. Optional sig_figs controls mantissa precision (default 6).
+    #[tool(name = "format_notation")]
+    fn format_notation(
+        &self,
+        Parameters(req): Parameters<tools::precision::FormatNotationRequest>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        tools::precision::format_notation_tool(req)
+    }
+
+    /// Converts a decimal number to a fraction using continued fractions.
+    /// Returns numerator, denominator, mixed number string, and exact flag.
+    /// Optional max_denominator for best approximation (e.g. 0.333 with
+    /// max_denominator >= 3 -> 1/3).
+    #[tool(name = "to_fraction")]
+    fn to_fraction(
+        &self,
+        Parameters(req): Parameters<tools::precision::ToFractionRequest>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        tools::precision::to_fraction_tool(req)
+    }
+
+    /// Converts an integer between bases (2, 8, 10, 16). Accepts 0x/0o/0b
+    /// prefixes for auto-detection; bare values are decimal. Returns all
+    /// four representations (decimal, hex, octal, binary) plus the result in
+    /// the requested base. Negative values use sign-magnitude form.
+    #[tool(name = "base_convert")]
+    fn base_convert(
+        &self,
+        Parameters(req): Parameters<tools::programmer::BaseConvertRequest>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        tools::programmer::base_convert_tool(req)
+    }
+
+    /// Performs bitwise operations: "and", "or", "xor", "not", "shl", "shr".
+    /// Values are masked to bit_width (8, 16, 32, 64; default 64). When
+    /// signed=true, values are interpreted as two's complement (e.g. 0xFF
+    /// as signed 8-bit = -1). shl drops shifted-out bits; shr is arithmetic
+    /// when signed, logical when unsigned. Shift count must be in
+    /// [0, bit_width).
+    #[tool(name = "bitwise")]
+    fn bitwise(
+        &self,
+        Parameters(req): Parameters<tools::programmer::BitwiseRequest>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        tools::programmer::bitwise_tool(req)
+    }
+
+    /// Converts a value from one unit to another. Supported quantities:
+    /// length (m, km, cm, mm, mi, yd, ft, in, nmi), mass (kg, g, mg, t, lb,
+    /// oz, st), temperature (C, F, K), volume (l, ml, m3, gal, qt, pt, cup,
+    /// floz), speed (m/s, km/h, mph, kn), area (m2, km2, ha, acre, ft2),
+    /// duration (ms, s, min, h, d, wk), data (B, KB, MB, GB, TB, KiB, MiB,
+    /// GiB, TiB, bit), pressure (Pa, kPa, bar, atm, psi, mmHg), energy (J,
+    /// kJ, cal, kcal, Wh, kWh, BTU), power (W, kW, MW, hp), force (N, kN,
+    /// lbf), angle (deg, rad, grad). KB=1000 bytes, KiB=1024 bytes.
+    #[tool(name = "convert_unit")]
+    fn convert_unit(
+        &self,
+        Parameters(req): Parameters<tools::units::ConvertUnitRequest>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        tools::units::convert_unit_tool(req)
+    }
+
+    /// Performs arithmetic on two quantities (add or subtract). Both
+    /// operands must be the same quantity (e.g. km + m). Temperature is not
+    /// supported (use convert_unit instead). Optional result_unit defaults
+    /// to the left operand's unit.
+    #[tool(name = "quantity_arithmetic")]
+    fn quantity_arithmetic(
+        &self,
+        Parameters(req): Parameters<tools::units::QuantityArithmeticRequest>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        tools::units::quantity_arithmetic_tool(req)
+    }
+
+    /// Adds a duration to a date. Years and months use clamped calendar
+    /// arithmetic (e.g. Jan 31 + 1 month -> Feb 28; Feb 29 + 1 year -> Feb 28).
+    /// Weeks/days/hours/minutes/seconds use exact time arithmetic. All values
+    /// may be negative. Date-only input yields date-only output unless time
+    /// units (hours/minutes/seconds) are used. Accepted input formats:
+    /// YYYY-MM-DD, YYYY-MM-DD HH:MM:SS, YYYY-MM-DDTHH:MM:SS.
+    #[tool(name = "date_add")]
+    fn date_add(
+        &self,
+        Parameters(req): Parameters<tools::datetime::DateAddRequest>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        tools::datetime::date_add_tool(req)
+    }
+
+    /// Computes the difference between two dates. Unit "auto" (default)
+    /// returns a {years, months, days, total_days, sign} breakdown where
+    /// years/months count only complete clamped calendar anniversaries.
+    /// Other units: "years", "months", "weeks", "days", "hours", "minutes",
+    /// "seconds" (all signed). For finer granularity than whole months/years,
+    /// use days or hours. Datetime inputs also include total_seconds.
+    #[tool(name = "date_diff")]
+    fn date_diff(
+        &self,
+        Parameters(req): Parameters<tools::datetime::DateDiffRequest>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        tools::datetime::date_diff_tool(req)
+    }
+
+    /// Returns calendar information about a date: weekday name, ISO week
+    /// number, day of year, days in month, leap year flag, and days
+    /// remaining in the year.
+    #[tool(name = "date_info")]
+    fn date_info(
+        &self,
+        Parameters(req): Parameters<tools::datetime::DateInfoRequest>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        tools::datetime::date_info_tool(req)
+    }
+
+    /// Computes percentage-related calculations. Modes: "percent_of" (b% of
+    /// a), "what_percent" (a is what % of b), "percent_change" (from a to b),
+    /// "increase" (a increased by b%), "decrease" (a decreased by b%).
+    #[tool(name = "percentage")]
+    fn percentage(
+        &self,
+        Parameters(req): Parameters<tools::finance::PercentageRequest>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        tools::finance::percentage_tool(req)
+    }
+
+    /// Computes compound interest: future value, total interest, and
+    /// effective annual rate. compounds_per_year=0 means continuous
+    /// compounding (Pe^rt). Default compounds_per_year is 12.
+    #[tool(name = "compound_interest")]
+    fn compound_interest(
+        &self,
+        Parameters(req): Parameters<tools::finance::CompoundInterestRequest>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        tools::finance::compound_interest_tool(req)
+    }
+
+    /// Computes loan payment (amortization): payment amount, number of
+    /// payments, total paid, and total interest. payments_per_year defaults
+    /// to 12 (monthly). Zero-interest loans are handled (payment = P/n).
+    #[tool(name = "loan_payment")]
+    fn loan_payment(
+        &self,
+        Parameters(req): Parameters<tools::finance::LoanPaymentRequest>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        tools::finance::loan_payment_tool(req)
+    }
+
+    /// Computes net present value (NPV). cashflows[0] is at t=0 (not
+    /// discounted). NOTE: this differs from Excel's NPV, which discounts
+    /// the first cash flow by one period.
+    #[tool(name = "net_present_value")]
+    fn net_present_value(
+        &self,
+        Parameters(req): Parameters<tools::finance::NetPresentValueRequest>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        tools::finance::net_present_value_tool(req)
+    }
+
+    /// Computes the internal rate of return (IRR) using Newton-Raphson with
+    /// a bisection fallback. Cashflows must have at least one sign change.
+    /// Returns the rate nearest the initial guess (default 10%). Multiple
+    /// IRRs are possible for non-conventional cashflows.
+    #[tool(name = "internal_rate_of_return")]
+    fn internal_rate_of_return(
+        &self,
+        Parameters(req): Parameters<tools::finance::IrrRequest>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        tools::finance::internal_rate_of_return_tool(req)
+    }
+
+    /// Computes return on investment (ROI): roi_pct = (gain - cost) / cost
+    /// * 100, and net_gain = gain - cost. Cost must not be zero.
+    #[tool(name = "return_on_investment")]
+    fn return_on_investment(
+        &self,
+        Parameters(req): Parameters<tools::finance::RoiRequest>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        tools::finance::return_on_investment_tool(req)
+    }
 }
 
 // `#[tool_handler]` is a proc-macro that implements the `ServerHandler` trait
@@ -325,7 +530,7 @@ impl ServerHandler for Calculator {
         .with_server_info(rmcp::model::Implementation::from_build_env())
         // Instructions shown to the LLM client when it connects. This helps
         // the LLM understand what the server can do.
-        .with_instructions("Mathematical calculator: symbolic math, statistics, matrices.")
+        .with_instructions("Mathematical calculator: symbolic math, statistics, matrices, units, dates, programmer/integer, finance, precision.")
     }
 }
 
