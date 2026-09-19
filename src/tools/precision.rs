@@ -387,8 +387,8 @@ mod tests {
 
     #[test]
     fn test_round_decimals() {
-        assert_eq!(round_number(3.14159, 2, "half_up").unwrap(), 3.14);
-        assert_eq!(round_number(3.14159, 4, "half_up").unwrap(), 3.1416);
+        assert_eq!(round_number(123.456, 2, "half_up").unwrap(), 123.46);
+        assert_eq!(round_number(123.45678, 4, "half_up").unwrap(), 123.4568);
     }
 
     #[test]
